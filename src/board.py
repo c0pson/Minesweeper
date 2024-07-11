@@ -7,10 +7,11 @@ from properties import COLOR
 from tile import Tile
 
 class Board(ctk.CTkFrame):
-    def __init__(self, master, size: int, difficulty: str) -> None:
+    def __init__(self, master, size: int, difficulty: str, update_func) -> None:
         super().__init__(master, fg_color=COLOR.BACKGROUND)
-        self.pack(padx=5, pady=5, expand=True)
+        self.pack(side=ctk.BOTTOM, padx=5, pady=5, expand=True)
         self.size = size
+        self.update_func = update_func
         self.difficulty = self.set_difficulty(difficulty)
         self.bombs_amount: int = int(self.size * self.size * self.difficulty)
         self.board: list[list[Tile]] = self.create_board()
@@ -24,7 +25,7 @@ class Board(ctk.CTkFrame):
                                     corner_radius=0)
             frame.pack(side='top', padx=0, pady=0, expand=True)
             for j in range(self.size):
-                board[i][j] = Tile(frame, i, j, self.master.reveal_cells)
+                board[i][j] = Tile(frame, i, j, self.master.reveal_cells, self.update_func)
         return board
 
     def set_difficulty(self, difficulty) -> float:
@@ -61,7 +62,7 @@ class Board(ctk.CTkFrame):
         def count_bombs_task(i, j):
             self.count_bombs_around_cell(i, j)
 
-        with ThreadPoolExecutor(max_workers=20) as executor:
+        with ThreadPoolExecutor(max_workers=100) as executor:
             futures = []
             for i in range(self.size):
                 for j in range(self.size):
@@ -84,7 +85,7 @@ class Board(ctk.CTkFrame):
             self.place_bombs(x, y)
             self.count_all_bombs()
         if self.board[x][y].is_bomb:
-            print('bomb')
+            # TODO: create game over function
             return
         if self.board[x][y].bombs_around > 0 and not self.board[x][y].is_bomb:
             self.board[x][y].is_revealed = True
