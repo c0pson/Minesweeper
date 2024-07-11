@@ -6,7 +6,7 @@ from board import Board
 class MainWindow(ctk.CTk):
     def __init__(self) -> None:
         super().__init__(fg_color=COLOR.BACKGROUND)
-        self.board: Board = Board(self, 7, 'easy')
+        self.board: Board = Board(self, 10, 'easy')
 
     def reveal_cells(self, x, y):
         self.board.reveal_around(x, y)
