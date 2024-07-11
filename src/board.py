@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import customtkinter as ctk
 import random
 
@@ -11,9 +12,9 @@ class Board(ctk.CTkFrame):
         self.pack(padx=5, pady=5, expand=True)
         self.size = size
         self.difficulty = self.set_difficulty(difficulty)
+        self.bombs_amount: int = int(self.size * self.size * self.difficulty)
         self.board: list[list[Tile]] = self.create_board()
-        self.place_bombs()
-        self.count_all_bombs()
+        self.first_move: bool = True
         self.display_board()
 
     def create_board(self) -> list[list[Tile]]:
@@ -38,26 +39,35 @@ class Board(ctk.CTkFrame):
         else: 
             raise ValueError(f'Improper string passed: {difficulty}')
 
-    def place_bombs(self) -> None:
-        bombs_amount: int = int(self.size * self.size * self.difficulty)
-        already_used: list[tuple[int, int]] = []
+    def place_bombs(self, x, y) -> None:
+        bombs_amount: int = self.bombs_amount
+        already_used: list[tuple[int, int]] = [ (x-1,y+1), (x,y+1), (x+1,y+1),
+                                                (x-1,y)  , (x , y), (x+1,y)  ,
+                                                (x-1,y-1), (x,y-1), (x+1,y-1) ]
         while bombs_amount:
-            x: int = random.randrange(0, self.size)
-            y: int = random.randrange(0, self.size)
-            if (x,y) not in already_used:
-                self.board[x][y].mark_as_bomb()
-                already_used.append((x,y))
+            x_coord: int = random.randrange(0, self.size)
+            y_coord: int = random.randrange(0, self.size)
+            if (x_coord,y_coord) not in already_used:
+                self.board[x_coord][y_coord].mark_as_bomb()
+                already_used.append((x_coord,y_coord))
                 bombs_amount -= 1
 
     def display_board(self) -> None:
         for i in range(self.size):
             for j in range(self.size):
-                    self.board[i][j].pack(side='left', padx=2, pady=2, expand=True)
+                self.board[i][j].pack(side='left', padx=2, pady=2, expand=True)
 
     def count_all_bombs(self) -> None:
-        for i in range(self.size):
-            for j in range(self.size):
-                    self.count_bombs_around_cell(i, j)
+        def count_bombs_task(i, j):
+            self.count_bombs_around_cell(i, j)
+
+        with ThreadPoolExecutor(max_workers=20) as executor:
+            futures = []
+            for i in range(self.size):
+                for j in range(self.size):
+                    futures.append(executor.submit(count_bombs_task, i, j))
+            for future in futures:
+                future.result()
 
     def count_bombs_around_cell(self, x, y) -> None:
         count = 0
@@ -69,6 +79,10 @@ class Board(ctk.CTkFrame):
         self.board[x][y].update_cell()
 
     def reveal_around(self, x, y) -> None:
+        if self.first_move:
+            self.first_move = False
+            self.place_bombs(x, y)
+            self.count_all_bombs()
         if self.board[x][y].is_bomb:
             print('bomb')
             return
