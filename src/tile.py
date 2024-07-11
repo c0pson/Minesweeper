@@ -15,10 +15,10 @@ class Tile(ctk.CTkLabel):
     def __init__(self, master, x_pos: int, y_pos: int, reveal_func) -> None:
         self.reveal_func = reveal_func
         self.position: tuple[int, int] = (x_pos, y_pos)
-        self.font = ctk.FontManager.windows_load_font(resource_path('fonts\\Poppins-Black.ttf'))
+        self.font = ctk.FontManager.windows_load_font(resource_path('fonts\\PressStart2P-Regular.ttf'))
         super().__init__(master, fg_color=COLOR.TILE_1, text='',
                         width=70, height=70, text_color=COLOR.WHITE,
-                        font=ctk.CTkFont('Poppins', 34))
+                        font=ctk.CTkFont('Press Start 2P', 34), anchor=ctk.S)
         self.bind('<Any-Button>', lambda e: self.on_click(e))
         self.is_bomb: bool = False
         self.bombs_around: int = 0
