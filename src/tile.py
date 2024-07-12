@@ -12,9 +12,11 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 class Tile(ctk.CTkLabel):
-    def __init__(self, master, x_pos: int, y_pos: int, reveal_func, update_func) -> None:
+    def __init__(self, master, x_pos: int, y_pos: int, reveal_func, update_func, flags_func, check_win) -> None:
         self.reveal_func = reveal_func
         self.update_func = update_func
+        self.flags_func = flags_func
+        self.check_win = check_win
         self.position: tuple[int, int] = (x_pos, y_pos)
         self.font = ctk.FontManager.windows_load_font(resource_path('fonts\\PressStart2P-Regular.ttf'))
         super().__init__(master, fg_color=COLOR.TILE_1, text='',
@@ -34,6 +36,8 @@ class Tile(ctk.CTkLabel):
             self.reveal_func(self.position[0], self.position[1])
         elif event.num == 3:
             self.mark_bomb()
+            if not self.flags_func():
+                self.check_win()
 
     def mark_bomb(self) -> None:
         if self.is_marked and not self.is_revealed:
@@ -42,6 +46,8 @@ class Tile(ctk.CTkLabel):
             self.is_marked = False
             self.update_func('inc')
         elif not self.is_marked and not self.is_revealed:
+            if not self.flags_func():
+                return
             self.is_marked = True
             self.configure(text='\u2691')
             self.configure(text_color=COLOR.ACCENT_2)
@@ -63,3 +69,12 @@ class Tile(ctk.CTkLabel):
             self.configure(fg_color=COLOR.TILE_2)
             self.configure(text_color=COLOR.WHITE)
             self.configure(anchor=ctk.S)
+
+    def restart(self):
+        self.is_bomb = False
+        self.is_marked = False
+        self.is_revealed = False
+        self.bombs_around = 0
+        self.configure(text='')
+        self.configure(fg_color=COLOR.TILE_1)
+        self.flags_func(True)

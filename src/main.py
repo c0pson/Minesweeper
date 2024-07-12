@@ -7,14 +7,23 @@ from menu import Menu
 class MainWindow(ctk.CTk):
     def __init__(self) -> None:
         super().__init__(fg_color=COLOR.BACKGROUND)
-        self.board: Board = Board(self, 10, 'easy', self.update_flags)
-        self.menu = Menu(self, self.board.bombs_amount)
+        self.board: Board = Board(self, 10, 'easy', self.update_flags, self.get_flags)
+        self.menu = Menu(self, self.board.bombs_amount, self.check_win_conditions)
 
     def reveal_cells(self, x, y):
         self.board.reveal_around(x, y)
 
     def update_flags(self, type_: str):
         self.menu.update_counter(type_)
+
+    def check_win_conditions(self):
+        self.board.check_win()
+
+    def get_flags(self, restart = False):
+        if restart:
+            self.menu.flag_amount = self.board.bombs_amount
+            self.menu.update_counter('')
+        return self.menu.flag_amount
 
 if __name__ == "__main__":
     window = MainWindow()

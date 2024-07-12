@@ -14,13 +14,12 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 class Menu(ctk.CTkFrame):
-    def __init__(self, master, bombs_amount: int) -> None:
+    def __init__(self, master, bombs_amount: int, win_func) -> None:
         super().__init__(master, fg_color=COLOR.ACCENT_1)
         self.pack(side='top', padx=5, pady=5, ipadx=10, ipady=10, fill=ctk.X, expand=True)
         self.font = ctk.FontManager.windows_load_font(resource_path('fonts\\PressStart2P-Regular.ttf'))
         self.flag_amount: int = bombs_amount
-        # self.inc_func = inc_func
-        # self.dec_func = dec_func
+        self.win_func = win_func
         self.next = None
         self.minutes: int = 0
         self.seconds: int = 0
@@ -51,6 +50,8 @@ class Menu(ctk.CTkFrame):
     def update_counter(self, type_: str) -> None:
         if type_ == 'inc':
             self.flag_amount += 1
-        else:
+        elif type_ == 'dec':
             self.flag_amount -= 1
         self.flag_counter_label.configure(text=f'Flags:{str(self.flag_amount).zfill(2)}')
+        if self.flag_amount == 0:
+            self.win_func
