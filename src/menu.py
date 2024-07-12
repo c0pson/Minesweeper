@@ -21,6 +21,7 @@ class Menu(ctk.CTkFrame):
         self.flag_amount: int = bombs_amount
         self.win_func = win_func
         self.next = None
+        self.paused = False
         self.minutes: int = 0
         self.seconds: int = 0
         self.time_label()
@@ -55,3 +56,21 @@ class Menu(ctk.CTkFrame):
         self.flag_counter_label.configure(text=f'Flags:{str(self.flag_amount).zfill(2)}')
         if self.flag_amount == 0:
             self.win_func
+
+    def reset_timer(self):
+        self.minutes = 0
+        self.seconds = 0
+        self.timer_label.configure(text='00:00')
+        self.master.after_cancel(self.next)
+        self.timer()
+
+    def pause_timer(self):
+        if not self.paused and self.next:
+            self.master.after_cancel(self.next)
+            self.paused = True
+        elif self.paused:
+            self.master.after_cancel(self.next)
+            self.seconds = 0
+            self.minutes = 0
+            self.timer()
+            self.paused = False

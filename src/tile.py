@@ -69,6 +69,10 @@ class Tile(ctk.CTkLabel):
             self.configure(fg_color=COLOR.TILE_2)
             self.configure(text_color=COLOR.WHITE)
             self.configure(anchor=ctk.S)
+        elif self.is_bomb and self.is_revealed and not self.is_marked:
+            self.configure(text='*')
+            self.configure(fg_color=COLOR.ACCENT_2)
+            self.configure(anchor=ctk.S)
 
     def restart(self):
         self.is_bomb = False

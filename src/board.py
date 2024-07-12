@@ -16,17 +16,19 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 class Board(ctk.CTkFrame):
-    def __init__(self, master, size: int, difficulty: str, update_func, flags_func) -> None:
+    def __init__(self, master, size: int, difficulty: str, update_func, flags_func, stop_timer_func) -> None:
         super().__init__(master, fg_color=COLOR.BACKGROUND)
         self.pack(side=ctk.BOTTOM, padx=5, pady=5, expand=True)
         self.font = ctk.FontManager.windows_load_font(resource_path('fonts\\PressStart2P-Regular.ttf'))
         self.size = size
+        self.stop_timer_func = stop_timer_func
         self.flags_func = flags_func
         self.update_func = update_func
         self.difficulty = self.set_difficulty(difficulty)
         self.bombs_amount: int = int(self.size * self.size * self.difficulty)
         self.board: list[list[Tile]] = self.create_board()
         self.first_move: bool = True
+        self.top_screen: bool = False
         self.display_board()
 
     def create_board(self) -> list[list[Tile]]:
@@ -110,9 +112,6 @@ class Board(ctk.CTkFrame):
                     if not self.board[i][j].bombs_around:
                         self.reveal_around(i, j)
 
-    def win(self):
-        print('win')
-
     def check_win(self) -> None:
         count: int = 0
         for i in range(self.size):
@@ -123,6 +122,9 @@ class Board(ctk.CTkFrame):
             self.win()
 
     def loss(self):
+        if self.top_screen:
+            return
+        self.top_screen = True
         self.game_over_label = ctk.CTkLabel(self.master, text='GAME OVER', fg_color=COLOR.ACCENT_1, bg_color=COLOR.ACCENT_1,
                                             font=ctk.CTkFont('Press Start 2P', 44), text_color=COLOR.ACCENT_2)
         self.restart_button = ctk.CTkButton(self.game_over_label, command=self.restart_board,
@@ -131,6 +133,29 @@ class Board(ctk.CTkFrame):
                                             hover=False)
         self.game_over_label.place(relx=0.5, rely=0.5, relwidth =1, relheight=0.2, anchor=ctk.CENTER)
         self.restart_button.grid(padx=10, pady=10, ipadx=0)
+        self.reveal_all()
+        self.stop_timer_func()
+
+    def win(self):
+        if self.top_screen:
+            return
+        self.top_screen = True
+        self.game_over_label = ctk.CTkLabel(self.master, text='YOU WON', fg_color=COLOR.ACCENT_1, bg_color=COLOR.ACCENT_1,
+                                            font=ctk.CTkFont('Press Start 2P', 44), text_color=COLOR.ACCENT_2)
+        self.restart_button = ctk.CTkButton(self.game_over_label, command=self.restart_board,
+                                            text='RESTART', fg_color=COLOR.TILE_2, anchor=ctk.S,
+                                            text_color=COLOR.WHITE, font=ctk.CTkFont('Press Start 2P', 22),
+                                            hover=False)
+        self.game_over_label.place(relx=0.5, rely=0.5, relwidth =1, relheight=0.2, anchor=ctk.CENTER)
+        self.restart_button.grid(padx=10, pady=10, ipadx=0)
+        self.reveal_all()
+        self.stop_timer_func()
+
+    def reveal_all(self):
+        for i in range(self.size):
+            for j in range(self.size):
+                self.board[i][j].is_revealed = True
+                self.board[i][j].update_cell()
 
     def restart_board(self):
         for i in range(self.size):
@@ -138,3 +163,5 @@ class Board(ctk.CTkFrame):
                 self.board[i][j].restart()
                 self.first_move = True
         self.game_over_label.destroy()
+        self.top_screen = False
+        self.stop_timer_func()

@@ -7,7 +7,7 @@ from menu import Menu
 class MainWindow(ctk.CTk):
     def __init__(self) -> None:
         super().__init__(fg_color=COLOR.BACKGROUND)
-        self.board: Board = Board(self, 10, 'easy', self.update_flags, self.get_flags)
+        self.board: Board = Board(self, 10, 'easy', self.update_flags, self.get_flags, self.stop_timer)
         self.menu = Menu(self, self.board.bombs_amount, self.check_win_conditions)
 
     def reveal_cells(self, x, y):
@@ -23,7 +23,11 @@ class MainWindow(ctk.CTk):
         if restart:
             self.menu.flag_amount = self.board.bombs_amount
             self.menu.update_counter('')
+            self.menu.reset_timer()
         return self.menu.flag_amount
+
+    def stop_timer(self):
+        self.menu.pause_timer()
 
 if __name__ == "__main__":
     window = MainWindow()
